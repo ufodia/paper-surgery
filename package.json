@@ -1,0 +1,30 @@
+{
+  "name": "paper-surgery",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Repair the reading order and meaning of a PDF before handing it to AI.",
+  "author": "Ufodia",
+  "license": "MIT",
+  "scripts": {
+    "predev": "node scripts/vendor-pdf.mjs",
+    "dev": "vite --host 127.0.0.1",
+    "prebuild": "node scripts/vendor-pdf.mjs",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "sample": "node scripts/make-sample.mjs",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.5.438"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "pdf-lib": "1.17.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}
