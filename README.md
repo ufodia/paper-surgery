@@ -9,6 +9,8 @@
 
 # Paper Surgery
 
+**[Open the live app ↗](https://paper-surgery.vercel.app/)** · [Deployment guide](docs/DEPLOYMENT.md)
+
 **A clearer document. A better answer.**
 
 A PDF can look perfectly clear while its extracted text jumps between columns or separates a value from its table heading. Paper Surgery puts the original beside editable text blocks, so you can repair the input before handing it to an AI assistant.
