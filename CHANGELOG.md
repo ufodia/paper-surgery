@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Handle local file-read errors without an uncaught browser exception, and keep document controls usable for a retry.
+- Reject oversized PDFs before reading their bytes and serialize document reads from the start of loading.
+- Add a browser regression for failed reads followed by a successful sample load.
+
 ## 0.1.0 — 2026-11-13
 
 Initial open-source implementation of Paper Surgery.

@@ -28,3 +28,16 @@ test('local workbench: analysis, evidence, export and responsive layout',async({
   expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
   expect(errors).toEqual([]);
 });
+
+test('a failed local PDF read reports the error and allows the next document',async({page})=>{
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('/');
+  await page.evaluate(()=>{const read=File.prototype.arrayBuffer;File.prototype.arrayBuffer=function(){return this.name==='unreadable.pdf'?Promise.reject(new Error('Disk read interrupted.')):read.call(this);};});
+  await page.locator('#pdf-input').setInputFiles({name:'unreadable.pdf',mimeType:'application/pdf',buffer:Buffer.from('unreadable')});
+  await expect(page.locator('#status')).toHaveText('Disk read interrupted.');
+  await expect(page.locator('#status')).toHaveClass(/error/);
+  await expect(page.locator('#pdf-input')).toBeEnabled();
+  await page.locator('#sample').click();
+  await expect(page.locator('.block')).toHaveCount(26);
+  expect(errors).toEqual([]);
+});

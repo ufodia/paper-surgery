@@ -7,7 +7,7 @@ Verified on 13 November 2026 (Europe/Istanbul), using Windows, Node.js 24.18.0, 
 | TypeScript | Passed |
 | Unit tests | 24 passed |
 | Production build | Passed |
-| Browser workflow | Passed, including evidence/export and a 390px viewport |
+| Browser workflows | 2 passed: document review/export at a 390px viewport, plus failed local file read and recovery |
 | Runtime errors | No uncaught application errors in the tested flow |
 | Production dependency audit | No known vulnerabilities reported by npm at check time |
 

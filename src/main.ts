@@ -20,13 +20,15 @@ let page = 1, digest = '', name = '', selected = '', loading = false, renderGene
 let renderTask: ReturnType<pdfjs.PDFPageProxy['render']> | null = null;
 function status(message: string, error = false) { $('status').textContent = message; $('status').classList.toggle('error', error); }
 function download(filename: string, content: string, type: string) { const url = URL.createObjectURL(new Blob([content],{type})); const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
-async function openPdf(buffer: ArrayBuffer, filename: string) {
+async function openPdf(readBuffer: () => Promise<ArrayBuffer>, filename: string, size?: number) {
   if(loading) return;
-  loading=true; $('sample').setAttribute('disabled','');
+  loading=true; $('sample').setAttribute('disabled',''); $('pdf-input').setAttribute('disabled','');
   let pendingTask: pdfjs.PDFDocumentLoadingTask | null = null;
   try {
-    if (buffer.byteLength > 40*1024*1024) throw new Error('Choose a PDF smaller than 40 MB.');
+    if (size !== undefined && size > 40*1024*1024) throw new Error('Choose a PDF smaller than 40 MB.');
     status('Reading your PDF locally…');
+    const buffer = await readBuffer();
+    if (buffer.byteLength > 40*1024*1024) throw new Error('Choose a PDF smaller than 40 MB.');
     const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buffer))).map(n=>n.toString(16).padStart(2,'0')).join('');
     const assetBase = `${import.meta.env.BASE_URL}vendor/pdfjs/`;
     pendingTask = pdfjs.getDocument({data:new Uint8Array(buffer),useSystemFonts:true,maxImageSize:20_000_000,standardFontDataUrl:assetBase+'standard_fonts/',cMapUrl:assetBase+'cmaps/',cMapPacked:true,wasmUrl:assetBase+'wasm/'});
@@ -45,7 +47,7 @@ async function openPdf(buffer: ArrayBuffer, filename: string) {
     $('filename').textContent=filename; $('markdown').removeAttribute('disabled');$('patch').removeAttribute('disabled');
     await renderPage(); renderBlocks();
     status(extracted.length?`${candidate.numPages} page${candidate.numPages===1?'':'s'} · ${extracted.length} text blocks · Ready for your review.`:'No selectable text found. Scanned PDFs need OCR before this version can repair them.');
-  } catch(error){status(error instanceof Error?error.message:'Could not read this PDF.',true);}finally{if(pendingTask)await pendingTask.destroy().catch(()=>{});loading=false;$('sample').removeAttribute('disabled');}
+  } catch(error){status(error instanceof Error?error.message:'Could not read this PDF.',true);}finally{if(pendingTask)await pendingTask.destroy().catch(()=>{});loading=false;$('sample').removeAttribute('disabled');$('pdf-input').removeAttribute('disabled');}
 }
 async function renderPage() {
   if(!doc)return;
@@ -82,8 +84,8 @@ function renderBlocks(){
   });updatePreview();selectBlock(selected);
 }
 function updatePreview(){$('preview').textContent=makeMarkdown(blocks);}
-$<HTMLInputElement>('pdf-input').addEventListener('change',async e=>{const file=(e.target as HTMLInputElement).files?.[0];if(file)await openPdf(await file.arrayBuffer(),file.name);(e.target as HTMLInputElement).value='';});
-$('sample').addEventListener('click',async()=>{try{const response=await fetch(`${import.meta.env.BASE_URL}sample.pdf`);if(!response.ok)throw new Error('The sample could not be loaded.');await openPdf(await response.arrayBuffer(),'field-notes.pdf');}catch(error){status(String(error),true);}});
+$<HTMLInputElement>('pdf-input').addEventListener('change',async e=>{const file=(e.target as HTMLInputElement).files?.[0];if(file)await openPdf(()=>file.arrayBuffer(),file.name,file.size);(e.target as HTMLInputElement).value='';});
+$('sample').addEventListener('click',()=>void openPdf(async()=>{const response=await fetch(`${import.meta.env.BASE_URL}sample.pdf`);if(!response.ok)throw new Error('The sample could not be loaded.');return response.arrayBuffer();},'field-notes.pdf'));
 for(const [id,delta]of [['prev',-1],['next',1]] as const)$ (id).addEventListener('click',async()=>{if(!doc)return;page=Math.min(doc.numPages,Math.max(1,page+delta));selected='';try{await renderPage();renderBlocks();}catch(error){status(String(error),true);}});
 $('markdown').addEventListener('click',()=>download(name.replace(/\.pdf$/i,'')+'.repaired.md',makeMarkdown(blocks),'text/markdown'));
 $('patch').addEventListener('click',()=>download(name.replace(/\.pdf$/i,'')+'.repair.json',JSON.stringify(makeRepair(name,digest,blocks),null,2),'application/json'));
