@@ -41,3 +41,32 @@ test('a failed local PDF read reports the error and allows the next document',as
   await expect(page.locator('.block')).toHaveCount(26);
   expect(errors).toEqual([]);
 });
+
+test('reordering updates the reading and preview, preserves the original, and retains focus',async({page})=>{
+  await page.goto('/');
+  await page.locator('#sample').click();
+  await expect(page.locator('.block')).toHaveCount(26);
+  await expect(page.locator('.repair-tip')).toContainText('original PDF stays unchanged');
+  await page.getByText('Preview corrected Markdown').click();
+  const first=page.locator('.block').first();
+  const second=page.locator('.block').nth(1);
+  const firstId=await first.getAttribute('data-block');
+  const firstText=await first.locator('textarea').inputValue();
+  const secondText=await second.locator('textarea').inputValue();
+  const initialPreview=await page.locator('#preview').textContent();
+  const marker=page.locator(`.marker[data-block="${firstId}"]`);
+  const markerStyle=await marker.getAttribute('style');
+  await expect(first.getByRole('button',{name:'Move block 1 up'})).toBeDisabled();
+  await first.getByRole('button',{name:'Move block 1 down'}).click();
+  await expect(page.locator('.block').first().locator('textarea')).toHaveValue(secondText);
+  await expect(page.locator('.block').nth(1).locator('textarea')).toHaveValue(firstText);
+  await expect(page.getByRole('button',{name:'Move block 2 down'})).toBeFocused();
+  await expect(page.locator('#move-status')).toHaveText('Block moved to position 2 of 26 on page 1.');
+  await expect(marker).toHaveAttribute('style',markerStyle);
+  expect(await page.locator('#preview').textContent()).not.toBe(initialPreview);
+  await page.getByRole('button',{name:'Move block 2 up'}).click();
+  await expect(page.locator('.block').first().locator('textarea')).toHaveValue(firstText);
+  await expect(page.locator('#preview')).toHaveText(initialPreview);
+  await expect(page.getByRole('button',{name:'Move block 1 down'})).toBeFocused();
+  await expect(page.locator('#move-status')).toHaveText('Block moved to position 1 of 26 on page 1.');
+});
