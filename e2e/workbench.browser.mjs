@@ -70,3 +70,12 @@ test('reordering updates the reading and preview, preserves the original, and re
   await expect(page.getByRole('button',{name:'Move block 1 down'})).toBeFocused();
   await expect(page.locator('#move-status')).toHaveText('Block moved to position 1 of 26 on page 1.');
 });
+
+
+test('keyboard file input focus is visible on the full-size upload label',async({page})=>{
+  await page.goto('/');
+  for(let i=0;i<12&&!(await page.locator('#pdf-input').evaluate(e=>e===document.activeElement));i++)await page.keyboard.press('Tab');
+  await expect(page.locator('#pdf-input')).toBeFocused();
+  const indicator=await page.locator('label[for="pdf-input"]').evaluate(e=>({width:e.getBoundingClientRect().width,outline:getComputedStyle(e).outlineStyle,thickness:parseFloat(getComputedStyle(e).outlineWidth)}));
+  expect(indicator.width).toBeGreaterThan(80);expect(indicator.outline).toBe('solid');expect(indicator.thickness).toBeGreaterThanOrEqual(2);
+});
