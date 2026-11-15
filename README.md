@@ -82,6 +82,8 @@ The production output is `dist/`. CI performs checks and a build; it does not de
 
 If this saves you a frustrating round trip with AI, [buy Ufodia a coffee](https://buymeacoffee.com/ufodia). Support helps maintain examples, improve compatibility, and keep the core openly available. Bug reports, thoughtful feedback, and documentation fixes help too.
 
+You can also [sponsor ufodia on GitHub](https://github.com/sponsors/ufodia).
+
 ## License and credits
 
 [MIT](LICENSE) © 2026 **Ufodia**. Original UI, sample material, and repository artwork are included under the same license. Dependencies retain their own licenses; review their notices before redistribution.
